@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "status": "not_updated",
+    "message": "还没有运行每日 API 更新脚本。",
+    "updatedAt": null,
+    "creditsCostEstimate": 0,
+    "sportKey": null,
+    "regions": "us,uk,eu",
+    "markets": "h2h"
+  },
+  "matches": {}
+}

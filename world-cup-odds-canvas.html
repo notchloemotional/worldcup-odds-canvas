@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026 世界杯盘口分析画布</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f3;
+      --panel: #ffffff;
+      --ink: #1b2520;
+      --muted: #66736b;
+      --line: #dce3dc;
+      --field: #147a56;
+      --field-dark: #0e5d43;
+      --gold: #c59122;
+      --red: #c64848;
+      --blue: #326fa8;
+      --soft-green: #e6f2ec;
+      --soft-gold: #fff6df;
+      --soft-red: #fbe9e8;
+      --shadow: 0 16px 50px rgba(32, 45, 36, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      letter-spacing: 0;
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px clamp(16px, 3vw, 40px);
+      border-bottom: 1px solid var(--line);
+      background: rgba(244, 246, 243, 0.92);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--field);
+      color: #fff;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(18px, 2vw, 25px);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .icon-btn,
+    .segmented button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      min-height: 38px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .icon-btn {
+      width: 40px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+
+    .icon-btn:hover,
+    .segmented button:hover {
+      transform: translateY(-1px);
+      border-color: #a9b8ad;
+    }
+
+    .segmented {
+      display: inline-grid;
+      grid-template-columns: repeat(3, minmax(70px, 1fr));
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #edf1ed;
+    }
+
+    .segmented button {
+      border: 0;
+      background: transparent;
+      min-height: 32px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    .segmented button.active {
+      background: var(--panel);
+      color: var(--field-dark);
+      box-shadow: 0 4px 18px rgba(20, 122, 86, 0.12);
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 22px;
+      padding: 22px clamp(16px, 3vw, 40px) 40px;
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 84px;
+      align-self: start;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel,
+    .match-card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 16px;
+    }
+
+    .hero-visual {
+      position: relative;
+      overflow: hidden;
+      min-height: 210px;
+      color: #fff;
+      background: #18231d;
+    }
+
+    .hero-visual img {
+      width: 100%;
+      height: 100%;
+      min-height: 210px;
+      object-fit: cover;
+      display: block;
+      filter: saturate(0.95) contrast(1.05);
+    }
+
+    .hero-copy {
+      position: absolute;
+      inset: auto 16px 16px 16px;
+      display: grid;
+      gap: 8px;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-copy strong {
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .hero-copy span {
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    select,
+    .search {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfb;
+      color: var(--ink);
+      min-height: 40px;
+      padding: 0 11px;
+      outline: 0;
+    }
+
+    .search {
+      font-size: 14px;
+    }
+
+    .stat-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-stat {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fafbfa;
+    }
+
+    .mini-stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .mini-stat strong {
+      font-size: 18px;
+    }
+
+    .source-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 0 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fbfcfb;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .pill.good {
+      border-color: #b7dbc9;
+      background: var(--soft-green);
+      color: var(--field-dark);
+      font-weight: 700;
+    }
+
+    .pill.warn {
+      border-color: #efd99c;
+      background: var(--soft-gold);
+      color: #795b12;
+      font-weight: 700;
+    }
+
+    .pill.bad {
+      border-color: #efc1bd;
+      background: var(--soft-red);
+      color: #963735;
+      font-weight: 700;
+    }
+
+    .content {
+      display: grid;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: 1.2fr repeat(3, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .summary-main,
+    .summary-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 15px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .summary-main h2 {
+      margin: 0 0 8px;
+      font-size: clamp(20px, 3vw, 34px);
+      line-height: 1.15;
+    }
+
+    .summary-main p,
+    .summary-box span {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 13px;
+    }
+
+    .summary-box strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 24px;
+    }
+
+    .matches {
+      display: grid;
+      gap: 16px;
+    }
+
+    .match-card {
+      overflow: hidden;
+    }
+
+    .match-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(90deg, #ffffff 0%, #f4faf6 100%);
+    }
+
+    .match-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .teams {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+
+    .team {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: clamp(20px, 2.5vw, 30px);
+      font-weight: 850;
+      min-width: 0;
+    }
+
+    .flag {
+      width: 34px;
+      height: 24px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: linear-gradient(90deg, var(--a), var(--b), var(--c));
+      flex: 0 0 auto;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+    }
+
+    .versus {
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .recommend {
+      display: grid;
+      align-content: center;
+      gap: 6px;
+      min-width: 210px;
+      padding: 12px;
+      border: 1px solid #b7dbc9;
+      border-radius: 8px;
+      background: var(--soft-green);
+    }
+
+    .recommend span {
+      color: var(--field-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .recommend strong {
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .match-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+      gap: 16px;
+      padding: 18px;
+    }
+
+    .canvas-zone {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .prob-grid {
+      display: grid;
+      gap: 9px;
+    }
+
+    .prob-row {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr) 48px 48px;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .bar-track {
+      position: relative;
+      height: 12px;
+      border-radius: 999px;
+      background: #edf1ed;
+      overflow: hidden;
+    }
+
+    .bar {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--w);
+      border-radius: 999px;
+      background: var(--field);
+    }
+
+    .bar.market {
+      top: auto;
+      height: 4px;
+      background: var(--gold);
+      opacity: 0.95;
+    }
+
+    .bar-label {
+      color: var(--muted);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .chart-panel,
+    .analysis-panel,
+    .odds-panel,
+    .pipeline {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      background: #fbfcfb;
+      min-width: 0;
+    }
+
+    .chart-title,
+    .small-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    canvas {
+      width: 100%;
+      height: 150px;
+      display: block;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    .factor-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .factor {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .factor-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #edf1ed;
+      overflow: hidden;
+    }
+
+    .factor-track span {
+      display: block;
+      width: var(--w);
+      height: 100%;
+      background: var(--c);
+      border-radius: 999px;
+    }
+
+    .note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 13px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th,
+    td {
+      padding: 8px 7px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 800;
+      background: #f4f6f3;
+    }
+
+    .pipeline {
+      display: grid;
+      gap: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .pipeline h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 12px;
+      min-height: 120px;
+    }
+
+    .step b {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .empty {
+      display: none;
+      border: 1px dashed #b8c3ba;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      color: var(--muted);
+      background: #fbfcfb;
+    }
+
+    .disclaimer {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+      padding: 2px 2px 0;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 0.8fr);
+      }
+
+      .summary-strip {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .match-body {
+        grid-template-columns: 1fr;
+      }
+
+      .steps {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .top-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .segmented {
+        width: calc(100% - 48px);
+      }
+
+      .sidebar,
+      .summary-strip,
+      .chart-grid,
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      .match-head {
+        grid-template-columns: 1fr;
+      }
+
+      .recommend {
+        min-width: 0;
+      }
+
+      .prob-row {
+        grid-template-columns: 42px minmax(0, 1fr) 42px 42px;
+        gap: 7px;
+      }
+
+      .factor {
+        grid-template-columns: 74px minmax(0, 1fr) 42px;
+      }
+
+      th,
+      td {
+        padding: 7px 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">26</div>
+        <div>
+          <h1>世界杯盘口分析画布</h1>
+          <p>赛程已按 2026 小组赛首轮校正 · 盘口数据待接真实 API</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="segmented" role="group" aria-label="比赛筛选">
+          <button class="active" data-filter="all">全部</button>
+          <button data-filter="value">有价值</button>
+          <button data-filter="avoid">观望</button>
+        </div>
+        <button class="icon-btn" id="refreshBtn" title="模拟刷新">↻</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar">
+        <section class="panel hero-visual" aria-label="分析视觉图">
+          <img src="dashboard-visual.png" alt="足球数据分析工作台视觉图">
+          <div class="hero-copy">
+            <strong>赛前一张图，先看风险再看收益</strong>
+            <span>把赔率、盘口、交易热度和模型概率统一到同一套判断框架。</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">今日控制台 <span class="pill warn">赛程校正版</span></div>
+          <div class="field">
+            <label for="dateFilter">比赛日</label>
+            <select id="dateFilter">
+              <option value="all">全部比赛日</option>
+              <option value="2026-06-11">2026-06-11</option>
+              <option value="2026-06-12">2026-06-12</option>
+              <option value="2026-06-13">2026-06-13</option>
+              <option value="2026-06-14">2026-06-14</option>
+              <option value="2026-06-15">2026-06-15</option>
+              <option value="2026-06-16">2026-06-16</option>
+              <option value="2026-06-17">2026-06-17</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="marketFilter">重点市场</label>
+            <select id="marketFilter">
+              <option value="all">欧赔 + 亚盘 + 大小球</option>
+              <option value="1x2">只看胜平负</option>
+              <option value="ah">只看亚洲让球</option>
+              <option value="ou">只看大小球</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="searchInput">搜索球队</label>
+            <input class="search" id="searchInput" placeholder="例如：加拿大、葡萄牙">
+          </div>
+          <div class="stat-list">
+            <div class="mini-stat"><span>首轮赛程</span><strong>24</strong></div>
+            <div class="mini-stat"><span>校正时间</span><strong id="updatedTime">15:45</strong></div>
+            <div class="mini-stat"><span>高风险比赛</span><strong id="riskCount">0</strong></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">建议数据源</div>
+          <div class="source-list">
+            <span class="pill good">Pinnacle</span>
+            <span class="pill good">Betfair Exchange</span>
+            <span class="pill">Bet365</span>
+            <span class="pill">DraftKings</span>
+            <span class="pill">FanDuel</span>
+            <span class="pill">William Hill</span>
+            <span class="pill">Unibet</span>
+            <span class="pill">BetMGM</span>
+            <span class="pill">Caesars</span>
+            <span class="pill">Sportradar</span>
+            <span class="pill">OddsJam</span>
+            <span class="pill">The Odds API</span>
+          </div>
+          <p class="note">正式版优先接授权 API 或数据供应商；不同国家和地区的博彩数据有合规要求，不建议直接抓取受限制页面。</p>
+        </section>
+      </aside>
+
+      <section class="content">
+        <div class="summary-strip">
+          <section class="summary-main">
+            <h2>今天先筛价值差，再决定买不买</h2>
+            <p>先把赛程校准，再接真实赔率 API。没有真实盘口前，页面只做结构演示，不输出下注建议。</p>
+          </section>
+          <section class="summary-box">
+            <span>赛程状态</span>
+            <strong id="bestEdge">-</strong>
+          </section>
+          <section class="summary-box">
+            <span>盘口状态</span>
+            <strong id="avgReturn">-</strong>
+          </section>
+          <section class="summary-box">
+            <span>建议单场上限</span>
+            <strong>本金 1.5%</strong>
+          </section>
+        </div>
+
+        <div class="matches" id="matches"></div>
+        <div class="empty" id="emptyState">没有匹配的比赛。换一个日期或筛选条件试试。</div>
+
+        <section class="pipeline">
+          <div>
+            <h3>正式网站建议流程</h3>
+            <p class="note">每天开赛前自动跑三次：早盘、临场前 6 小时、临场前 45 分钟。每次保存快照，避免只看最终盘口。</p>
+          </div>
+          <div class="steps">
+            <div class="step">
+              <b>1. 赛程与基础信息</b>
+              <p>从 FIFA、Sportradar、Sportmonks 等接口同步赛程、球场、开球时间、裁判、天气和球队新闻。</p>
+            </div>
+            <div class="step">
+              <b>2. 盘口与交易数据</b>
+              <p>采集主流欧赔、亚盘、大小球、交易所成交量、返还率、凯利指数、盘口变化和公司间分歧。</p>
+            </div>
+            <div class="step">
+              <b>3. 概率模型</b>
+              <p>用 ELO/xG、阵容伤停、休息天数、旅行距离、历史风格和盘口走势输出去水后的胜平负概率。</p>
+            </div>
+            <div class="step">
+              <b>4. 中文画布</b>
+              <p>每场只给一个主判断、一个防守选项、风险等级和资金上限；保留原始数据给你复盘。</p>
+            </div>
+          </div>
+          <p class="disclaimer">提示：本页面是体育彩票分析辅助原型，不保证命中率，不构成任何确定收益承诺。请遵守所在地法律法规，理性投注，资金管理永远优先于预测。</p>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const schedule = [
+      ["m1", "M1", "A组", "2026-06-11", "13:00", "墨西哥城", "墨西哥", "南非", [["#006847", "#ffffff", "#ce1126"], ["#007a4d", "#ffb612", "#de3831"]]],
+      ["m2", "M2", "A组", "2026-06-11", "20:00", "瓜达拉哈拉", "韩国", "捷克", [["#ffffff", "#c60c30", "#003478"], ["#ffffff", "#d7141a", "#11457e"]]],
+      ["m3", "M3", "B组", "2026-06-12", "15:00", "多伦多", "加拿大", "波黑", [["#d71920", "#ffffff", "#d71920"], ["#002395", "#fecb00", "#ffffff"]]],
+      ["m4", "M4", "D组", "2026-06-12", "18:00", "洛杉矶", "美国", "巴拉圭", [["#b22234", "#ffffff", "#3c3b6e"], ["#d52b1e", "#ffffff", "#0038a8"]]],
+      ["m5", "M5", "C组", "2026-06-13", "21:00", "波士顿", "海地", "苏格兰", [["#00209f", "#d21034", "#ffffff"], ["#0065bd", "#ffffff", "#0065bd"]]],
+      ["m6", "M6", "D组", "2026-06-13", "21:00", "温哥华", "澳大利亚", "土耳其", [["#00008b", "#ffffff", "#ff0000"], ["#e30a17", "#ffffff", "#e30a17"]]],
+      ["m7", "M7", "C组", "2026-06-13", "18:00", "纽约/新泽西", "巴西", "摩洛哥", [["#009c3b", "#ffdf00", "#002776"], ["#c1272d", "#006233", "#c1272d"]]],
+      ["m8", "M8", "B组", "2026-06-13", "12:00", "旧金山湾区", "卡塔尔", "瑞士", [["#8a1538", "#ffffff", "#8a1538"], ["#d52b1e", "#ffffff", "#d52b1e"]]],
+      ["m9", "M9", "E组", "2026-06-14", "19:00", "费城", "科特迪瓦", "厄瓜多尔", [["#f77f00", "#ffffff", "#009e60"], ["#ffdd00", "#034ea2", "#ed1c24"]]],
+      ["m10", "M10", "E组", "2026-06-14", "12:00", "休斯敦", "德国", "库拉索", [["#000000", "#dd0000", "#ffce00"], ["#002b7f", "#f9d90f", "#ffffff"]]],
+      ["m11", "M11", "F组", "2026-06-14", "15:00", "达拉斯", "荷兰", "日本", [["#ae1c28", "#ffffff", "#21468b"], ["#ffffff", "#bc002d", "#ffffff"]]],
+      ["m12", "M12", "F组", "2026-06-14", "20:00", "蒙特雷", "瑞典", "突尼斯", [["#006aa7", "#fecc00", "#006aa7"], ["#e70013", "#ffffff", "#e70013"]]],
+      ["m13", "M13", "H组", "2026-06-15", "18:00", "迈阿密", "沙特阿拉伯", "乌拉圭", [["#006c35", "#ffffff", "#006c35"], ["#0038a8", "#ffffff", "#fcd116"]]],
+      ["m14", "M14", "H组", "2026-06-15", "12:00", "亚特兰大", "西班牙", "佛得角", [["#aa151b", "#f1bf00", "#aa151b"], ["#003893", "#ffffff", "#cf2027"]]],
+      ["m15", "M15", "G组", "2026-06-15", "18:00", "洛杉矶", "伊朗", "新西兰", [["#239f40", "#ffffff", "#da0000"], ["#00247d", "#ffffff", "#cc142b"]]],
+      ["m16", "M16", "G组", "2026-06-15", "12:00", "西雅图", "比利时", "埃及", [["#000000", "#fae042", "#ed2939"], ["#ce1126", "#ffffff", "#000000"]]],
+      ["m17", "M17", "I组", "2026-06-16", "15:00", "纽约/新泽西", "法国", "塞内加尔", [["#0055a4", "#ffffff", "#ef4135"], ["#00853f", "#fdef42", "#e31b23"]]],
+      ["m18", "M18", "I组", "2026-06-16", "18:00", "波士顿", "伊拉克", "挪威", [["#ce1126", "#ffffff", "#000000"], ["#ba0c2f", "#ffffff", "#00205b"]]],
+      ["m19", "M19", "J组", "2026-06-16", "20:00", "堪萨斯城", "阿根廷", "阿尔及利亚", [["#74acdf", "#ffffff", "#74acdf"], ["#006233", "#ffffff", "#d21034"]]],
+      ["m20", "M20", "J组", "2026-06-16", "21:00", "旧金山湾区", "奥地利", "约旦", [["#ed2939", "#ffffff", "#ed2939"], ["#000000", "#ffffff", "#007a3d"]]],
+      ["m21", "M21", "L组", "2026-06-17", "19:00", "多伦多", "加纳", "巴拿马", [["#ce1126", "#fcd116", "#006b3f"], ["#005293", "#ffffff", "#d21034"]]],
+      ["m22", "M22", "L组", "2026-06-17", "15:00", "达拉斯", "英格兰", "克罗地亚", [["#ffffff", "#cf142b", "#ffffff"], ["#ff0000", "#ffffff", "#171796"]]],
+      ["m23", "M23", "K组", "2026-06-17", "12:00", "休斯敦", "葡萄牙", "刚果民主共和国", [["#006600", "#ff0000", "#ffcc00"], ["#007fff", "#f7d618", "#ce1021"]]],
+      ["m24", "M24", "K组", "2026-06-17", "20:00", "墨西哥城", "乌兹别克斯坦", "哥伦比亚", [["#1eb53a", "#ffffff", "#0099b5"], ["#fcd116", "#003893", "#ce1126"]]]
+    ];
+
+    const matches = schedule.map(([id, matchNo, group, date, time, city, home, away, flags]) => ({
+      id,
+      matchNo,
+      group,
+      date,
+      time: `${time} 当地`,
+      venue: `${city} · ${group} · ${matchNo}`,
+      home,
+      away,
+      flags,
+      tag: "avoid",
+      risk: "待定",
+      riskTone: "warn",
+      pick: "等待真实盘口，暂不下注",
+      hedge: "接入 The Odds API / Betfair 后再给建议",
+      confidence: 0,
+      returnRate: 0,
+      exchange: "暂无真实交易所成交量；当前只校正赛程。",
+      model: { home: 33.3, draw: 33.4, away: 33.3 },
+      market: { home: 33.3, draw: 33.4, away: 33.3 },
+      odds: [
+        ["待接入 API", null, null, null, null, null, null, null],
+        ["Pinnacle", null, null, null, null, null, null, null],
+        ["Betfair", null, null, null, null, null, null, null],
+        ["Bet365", null, null, null, null, null, null, null]
+      ],
+      movement: [1, 1, 1, 1, 1, 1, 1],
+      kelly: [0, 0, 0],
+      factors: [
+        ["盘口价值", 0, "var(--muted)"],
+        ["凯利分歧", 0, "var(--muted)"],
+        ["交易拥挤", 0, "var(--muted)"],
+        ["阵容不确定", 0, "var(--muted)"]
+      ],
+      note: "赛程已按 2026 世界杯小组赛首轮校正。赔率、凯利指数、返还率、必发/交易所热度还没有接真实 API，因此这里不生成投注结论。"
+    }));
+
+    let apiSnapshot = null;
+
+    const state = {
+      filter: "all",
+      date: "all",
+      market: "all",
+      search: ""
+    };
+
+    const formatPct = value => `${value.toFixed(1)}%`;
+
+    function formatUpdatedTime(value) {
+      if (!value) return "未更新";
+      return new Date(value).toLocaleString("zh-CN", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function applyOddsSnapshot(snapshot) {
+      apiSnapshot = snapshot;
+      if (!snapshot?.matches) return;
+      matches.forEach(match => {
+        const live = snapshot.matches[match.id];
+        if (!live) return;
+        match.model = live.model || match.model;
+        match.market = live.market || match.market;
+        match.odds = live.odds?.length ? live.odds : match.odds;
+        match.kelly = live.kelly || match.kelly;
+        match.movement = live.movement?.length > 1 ? live.movement : match.movement;
+        match.returnRate = live.returnRate || match.returnRate;
+        match.exchange = live.exchange || match.exchange;
+        match.note = live.note || match.note;
+        match.tag = "avoid";
+        match.risk = "待模型";
+        match.riskTone = "warn";
+        match.pick = "已有真实赔率，等待模型判断";
+        match.hedge = "当前只做赔率展示，不自动下注";
+        match.factors = [
+          ["盘口覆盖", Math.min(100, Math.round((live.odds?.length || 0) * 12)), "var(--field)"],
+          ["凯利分歧", Math.round(Math.max(...(live.kelly || [1])) * 50), "var(--gold)"],
+          ["交易拥挤", 0, "var(--muted)"],
+          ["阵容不确定", 0, "var(--muted)"]
+        ];
+      });
+      document.querySelector("#updatedTime").textContent = formatUpdatedTime(snapshot.meta?.updatedAt);
+    }
+
+    async function loadDailyOdds() {
+      try {
+        const response = await fetch(`data/odds-latest.json?v=${Date.now()}`);
+        if (!response.ok) return;
+        const snapshot = await response.json();
+        if (snapshot.meta?.status === "ok") applyOddsSnapshot(snapshot);
+      } catch (error) {
+        // Opening the HTML directly may block local JSON fetches; localhost preview works.
+      }
+    }
+
+    function edgeFor(match) {
+      const keys = ["home", "draw", "away"];
+      return Math.max(...keys.map(key => match.model[key] - match.market[key]));
+    }
+
+    function renderProbRows(match) {
+      const labels = [["home", "主胜"], ["draw", "平局"], ["away", "客胜"]];
+      return labels.map(([key, label]) => `
+        <div class="prob-row">
+          <b>${label}</b>
+          <div class="bar-track" title="绿色为模型概率，金色为市场概率">
+            <span class="bar" style="--w:${match.model[key]}%"></span>
+            <span class="bar market" style="--w:${match.market[key]}%"></span>
+          </div>
+          <span class="bar-label">${formatPct(match.model[key])}</span>
+          <span class="bar-label">${formatPct(match.market[key])}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderOddsRows(match) {
+      const fmt = value => value === null ? "--" : typeof value === "number" ? value.toFixed(2) : value;
+      const fmtReturn = value => value === null ? "--" : `${value.toFixed(1)}%`;
+      return match.odds.map(row => `
+        <tr>
+          <td>${row[0]}</td>
+          <td>${fmt(row[1])}</td>
+          <td>${fmt(row[2])}</td>
+          <td>${fmt(row[3])}</td>
+          <td>${fmtReturn(row[4])}</td>
+          <td>${fmt(row[5])}</td>
+          <td>${fmt(row[6])}</td>
+          <td>${fmt(row[7])}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderFactors(match) {
+      return match.factors.map(([name, score, color]) => `
+        <div class="factor">
+          <span>${name}</span>
+          <div class="factor-track"><span style="--w:${score}%;--c:${color}"></span></div>
+          <b>${score}</b>
+        </div>
+      `).join("");
+    }
+
+    function renderMatches() {
+      const root = document.querySelector("#matches");
+      const empty = document.querySelector("#emptyState");
+      const filtered = matches.filter(match => {
+        const byStatus = state.filter === "all" || match.tag === state.filter;
+        const byDate = state.date === "all" || match.date === state.date;
+        const bySearch = !state.search || `${match.home}${match.away}`.includes(state.search);
+        return byStatus && byDate && bySearch;
+      });
+
+      root.innerHTML = filtered.map(match => `
+        <article class="match-card" data-match-id="${match.id}">
+          <header class="match-head">
+            <div>
+              <div class="match-meta">
+                <span class="pill">${match.date} ${match.time}</span>
+                <span class="pill">${match.venue}</span>
+                <span class="pill ${match.riskTone}">风险：${match.risk}</span>
+              </div>
+              <div class="teams">
+                <span class="team"><span class="flag" style="--a:${match.flags[0][0]};--b:${match.flags[0][1]};--c:${match.flags[0][2]}"></span>${match.home}</span>
+                <span class="versus">VS</span>
+                <span class="team"><span class="flag" style="--a:${match.flags[1][0]};--b:${match.flags[1][1]};--c:${match.flags[1][2]}"></span>${match.away}</span>
+              </div>
+            </div>
+            <div class="recommend">
+              <span>参考买法</span>
+              <strong>${match.pick}</strong>
+              <small>${match.hedge}</small>
+            </div>
+          </header>
+          <div class="match-body">
+            <div class="canvas-zone">
+              <section class="analysis-panel">
+                <div class="small-title"><span>模型概率 vs 市场去水概率</span><span>绿=模型 · 金=市场</span></div>
+                <div class="prob-grid">${renderProbRows(match)}</div>
+                <p class="note">${match.note}</p>
+              </section>
+              <div class="chart-grid">
+                <section class="chart-panel">
+                  <div class="chart-title"><span>主选赔率走势</span><span>近 7 次快照</span></div>
+                  <canvas id="move-${match.id}" width="500" height="210"></canvas>
+                </section>
+                <section class="chart-panel">
+                  <div class="chart-title"><span>凯利指数热力</span><span>主 / 平 / 客</span></div>
+                  <canvas id="kelly-${match.id}" width="500" height="210"></canvas>
+                </section>
+              </div>
+            </div>
+            <aside class="side-stack">
+              <section class="analysis-panel">
+                <div class="small-title"><span>因子评分</span><span>${match.confidence ? `信心 ${match.confidence}` : "待真实数据"}</span></div>
+                <div class="factor-list">${renderFactors(match)}</div>
+                <p class="note">必发/交易所：${match.exchange}</p>
+              </section>
+              <section class="odds-panel">
+                <div class="small-title"><span>公司赔率与凯利</span><span>${match.returnRate ? `返还均值 ${match.returnRate.toFixed(1)}%` : "待 API"}</span></div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>公司</th><th>主</th><th>平</th><th>客</th><th>返还</th><th>K主</th><th>K平</th><th>K客</th>
+                    </tr>
+                  </thead>
+                  <tbody>${renderOddsRows(match)}</tbody>
+                </table>
+              </section>
+            </aside>
+          </div>
+        </article>
+      `).join("");
+
+      empty.style.display = filtered.length ? "none" : "block";
+      drawAll(filtered);
+      updateSummary(filtered);
+    }
+
+    function drawLine(canvas, values) {
+      const ctx = canvas.getContext("2d");
+      const width = canvas.width;
+      const height = canvas.height;
+      const pad = 24;
+      const min = Math.min(...values) - 0.04;
+      const max = Math.max(...values) + 0.04;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, width, height);
+      ctx.strokeStyle = "#dce3dc";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 4; i += 1) {
+        const y = pad + (height - pad * 2) * i / 3;
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(width - pad, y);
+        ctx.stroke();
+      }
+      const points = values.map((value, index) => {
+        const x = pad + (width - pad * 2) * index / (values.length - 1);
+        const y = height - pad - ((value - min) / (max - min)) * (height - pad * 2);
+        return [x, y];
+      });
+      ctx.strokeStyle = "#147a56";
+      ctx.lineWidth = 4;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      points.forEach(([x, y], index) => index ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      ctx.stroke();
+      points.forEach(([x, y], index) => {
+        ctx.fillStyle = index === points.length - 1 ? "#c59122" : "#147a56";
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.fillStyle = "#66736b";
+      ctx.font = "18px Arial";
+      ctx.fillText(values[0].toFixed(2), pad, height - 8);
+      ctx.fillText(values[values.length - 1].toFixed(2), width - pad - 44, height - 8);
+    }
+
+    function drawKelly(canvas, values) {
+      const ctx = canvas.getContext("2d");
+      const width = canvas.width;
+      const height = canvas.height;
+      const labels = ["主", "平", "客"];
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, width, height);
+      values.forEach((value, index) => {
+        const x = 42 + index * ((width - 84) / 3);
+        const w = (width - 120) / 3;
+        const barHeight = Math.min(1.18, value) / 1.18 * 122;
+        const y = height - 48 - barHeight;
+        const color = value > 1.05 ? "#c64848" : value < 0.98 ? "#147a56" : "#c59122";
+        ctx.fillStyle = "#edf1ed";
+        ctx.fillRect(x, 36, w, height - 84);
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, barHeight);
+        ctx.fillStyle = "#1b2520";
+        ctx.font = "bold 22px Arial";
+        ctx.fillText(value.toFixed(2), x + 8, y - 9);
+        ctx.fillStyle = "#66736b";
+        ctx.font = "18px Arial";
+        ctx.fillText(labels[index], x + w / 2 - 8, height - 18);
+      });
+    }
+
+    function drawAll(list) {
+      window.requestAnimationFrame(() => {
+        list.forEach(match => {
+          const move = document.querySelector(`#move-${match.id}`);
+          const kelly = document.querySelector(`#kelly-${match.id}`);
+          if (move) drawLine(move, match.movement);
+          if (kelly) drawKelly(kelly, match.kelly);
+        });
+      });
+    }
+
+    function updateSummary(list) {
+      const hasRealOdds = list.some(match => match.returnRate > 0);
+      const best = hasRealOdds ? list.reduce((top, match) => edgeFor(match) > edgeFor(top) ? match : top, list[0]) : null;
+      const avgReturn = hasRealOdds ? list.reduce((sum, match) => sum + match.returnRate, 0) / list.length : 0;
+      const riskCount = matches.filter(match => match.risk === "高").length;
+      document.querySelector("#bestEdge").textContent = hasRealOdds
+        ? `已匹配 ${list.filter(match => match.returnRate > 0).length} 场`
+        : (list.length ? `已校正 ${list.length} 场` : "-");
+      document.querySelector("#avgReturn").textContent = best ? `${avgReturn.toFixed(1)}%` : "待 API";
+      document.querySelector("#riskCount").textContent = riskCount;
+    }
+
+    document.querySelectorAll(".segmented button").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".segmented button").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+        state.filter = button.dataset.filter;
+        renderMatches();
+      });
+    });
+
+    document.querySelector("#dateFilter").addEventListener("change", event => {
+      state.date = event.target.value;
+      renderMatches();
+    });
+
+    document.querySelector("#marketFilter").addEventListener("change", event => {
+      state.market = event.target.value;
+    });
+
+    document.querySelector("#searchInput").addEventListener("input", event => {
+      state.search = event.target.value.trim();
+      renderMatches();
+    });
+
+    document.querySelector("#refreshBtn").addEventListener("click", () => {
+      const now = new Date();
+      document.querySelector("#updatedTime").textContent = now.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+      matches.forEach(match => {
+        match.confidence = Math.max(42, Math.min(76, match.confidence + Math.round(Math.random() * 6 - 3)));
+      });
+      renderMatches();
+    });
+
+    loadDailyOdds().finally(renderMatches);
+  </script>
+</body>
+</html>
